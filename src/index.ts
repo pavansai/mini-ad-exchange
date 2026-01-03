@@ -1,8 +1,11 @@
 import express from 'express';
 import { start } from 'node:repl';
 import pool from './db';
+import { error } from 'node:console';
+import { connectProducer, sendImpression } from './kafka';
 const app = express();
 const PORT = 3000;
+
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
@@ -44,22 +47,21 @@ app.get('/impression', async (req, res) => {
         res.status(400).json({ error: 'ad_id is required' });
         return;
     }
-    await pool.query(
-        'INSERT INTO impressions (ad_id) VALUES ($1)',
-        [adId]
+    await sendImpression(adId as string);
+    
+    const pixel = Buffer.from(
+        'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
+        'base64'
     );
-const pixel = Buffer.from(
-    'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
-    'base64'
-);
     res.setHeader('Content-Type', 'image/gif');
     res.send(pixel);
-})
+});
 
-app.get('/click', async(req, res)=>{
+
+app.get('/click', async (req, res) => {
     const adId = req.query.ad_id;
-    if(!adId){
-        res.status(400).json({error: 'a_id is required'});
+    if (!adId) {
+        res.status(400).json({ error: 'a_id is required' });
         return;
     }
 
@@ -73,11 +75,14 @@ app.get('/click', async(req, res)=>{
         [adId]
     );
 
-    if(result.rows.length === 0){
-        res.status(400).json({error: 'Ad not found' });
+    if (result.rows.length === 0) {
+        res.status(400).json({ error: 'Ad not found' });
         return;
-    } 
+    }
 })
-app.listen(PORT, () => {
-    console.log(`Ad server running on http://local:${PORT}`);
+connectProducer().then(() => {
+    app.listen(PORT, () => {
+        console.log(`Ad server running on http://localhost:${PORT}`);
+    });
 });
+
