@@ -104,16 +104,6 @@ BACKGROUND PATH (Async):
       
    (Happens independently of user requests)How Kafka Protects the Database
 
-PHASE 1 (Direct DB)              PHASE 2 (Kafka)
-═══════════════════              ═══════════════
-
-User ──▶ API ──▶ DB ──▶ User     User ──▶ API ──▶ Kafka ──▶ User
-              │                                      │
-              │                              Consumer ──▶ DB
-              │                              (background)
-              ▼                                      
-        Synchronous                          Asynchronous
-        (blocked)                            (non-blocking)
 
 
 Response Time:                   Response Time:
@@ -129,14 +119,6 @@ Under Load:                      Under Load:
 │ Failed: 71.5%  │               │ Failed: 0.1%   │
 │ DB crushed     │               │ DB protected   │
 └────────────────┘               └────────────────┘
-
-Key Learnings
-1. Synchronous vs Asynchronous
-SYNCHRONOUS (Phase 1):
-─────────────────────
-Request must WAIT for database.
-If DB is slow, user is slow.
-If DB is down, user gets error.
 
 Architecture Summary
 
