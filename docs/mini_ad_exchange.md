@@ -1,5 +1,5 @@
 
-Mini Ad Exchange - System Design Documentation
+**Mini Ad Exchange - System Design Documentation**
 Project Overview
 A learning project to understand distributed systems patterns by building light weighted an ad impression tracking system. The project evolved through two phases: direct database writes, then async processing with Kafka.
 
