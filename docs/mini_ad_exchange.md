@@ -83,7 +83,6 @@ System Diagram
          │           │    pace)           │Request Flow (Phase 2)
 
 BACKGROUND PATH (Async):
-════════════════════════
 
          Kafka Queue
          ┌─────────────────────────────────┐
