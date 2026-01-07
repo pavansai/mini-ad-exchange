@@ -102,16 +102,6 @@ BACKGROUND PATH (Async):
             ▼
       Poll next message...
       
-   (Happens independently of user requests)How Kafka Protects the Database
-
-
-
-Response Time:                   Response Time:
-├─ API processing                ├─ API processing  
-├─ DB write         ◀── SLOW     ├─ Kafka write     ◀── FAST (~2ms)
-├─ DB confirmation               └─ Done!
-└─ Send response    
-
 
 Under Load:                      Under Load:
 ┌────────────────┐               ┌────────────────┐
@@ -176,17 +166,6 @@ Architecture Summary
                          │ - impressions   │
                          │ - clicks        │
                          └─────────────────┘
-Files Structure
-mini-ad-exchange/
-├── src/
-│   ├── index.ts        # Express API server
-│   ├── db.ts           # PostgreSQL connection pool
-│   ├── kafka.ts        # Kafka producer
-│   └── consumer.ts     # Kafka consumer (separate process)
-├── docker-compose.yml  # Kafka broker setup
-├── package.json
-└── tsconfig.json
-Commands Reference
 # Start Kafka
 docker-compose up -d
 
