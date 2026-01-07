@@ -5,9 +5,6 @@ A learning project to understand distributed systems patterns by building light 
 
 Phase 1: Direct Database Architecture
 System Diagram
-┌──────────────────────────────────────────────────────────────────┐
-│                         PHASE 1: DIRECT DB                       │
-└──────────────────────────────────────────────────────────────────┘
 
     ┌─────────┐         ┌─────────────────┐         ┌────────────┐
     │  User   │         │   Express API   │         │ PostgreSQL │
@@ -30,9 +27,6 @@ System Diagram
     ─────────────────────────────────────────────────────────────▶
     │ Request │ DB Write │ DB Response │ HTTP Response │
     │  arrives │  starts  │   received  │    sent       │
-┌─────────────────────────────────────────────────────────────────┐
-│                    BOTTLENECK POINTS                            │
-└─────────────────────────────────────────────────────────────────┘
 
                     ┌─────────────────┐
                     │   100 requests  │
@@ -57,9 +51,6 @@ System Diagram
 
 Phase 2: Kafka Architecture
 System Diagram
-┌──────────────────────────────────────────────────────────────────┐
-│                      PHASE 2: KAFKA PATH                         │
-└──────────────────────────────────────────────────────────────────┘
 
     ┌─────────┐      ┌─────────────┐      ┌─────────────────────┐
     │  User   │      │ Express API │      │    Kafka Broker     │
@@ -112,9 +103,6 @@ BACKGROUND PATH (Async):
       Poll next message...
       
    (Happens independently of user requests)How Kafka Protects the Database
-┌─────────────────────────────────────────────────────────────────┐
-│                    DIRECT COMPARISON                            │
-└─────────────────────────────────────────────────────────────────┘
 
 PHASE 1 (Direct DB)              PHASE 2 (Kafka)
 ═══════════════════              ═══════════════
@@ -151,9 +139,6 @@ If DB is slow, user is slow.
 If DB is down, user gets error.
 
 Architecture Summary
-┌─────────────────────────────────────────────────────────────────┐
-│              MINI AD EXCHANGE - FINAL ARCHITECTURE              │
-└─────────────────────────────────────────────────────────────────┘
 
 
                          ┌─────────────────┐
