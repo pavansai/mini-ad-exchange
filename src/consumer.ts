@@ -1,7 +1,5 @@
 import { Kafka } from "kafkajs";
 import pool from './db';
-import { ftruncateSync } from "node:fs";
-import { resolve } from "node:dns";
 
 const kafka = new Kafka({
     clientId: 'mini-ad-exchange-consumer',
@@ -19,24 +17,21 @@ async function withRetry<T>(
     maxRetries: number = 3,
     delayMs: number = 1000
 ): Promise<T> {
-    if (maxRetries < 1){
-        throw new Error('maxRetires should be at least 1');
+    if (maxRetries < 1) {
+        throw new Error('maxRetries should be at least 1');
     }
-    let lastError: Error =  new Error('unknown error');
-    
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             return await fn();
         } catch (error) {
-            lastError = error as Error;
-            console.log(`Attemp ${attempt}/${maxRetries} failed: ${lastError.message}`);
-            if (attempt < maxRetries) {
-                console.log(`Waiting ${delayMs}ms before retry...`);
-                await delay(delayMs);
-            }
+            console.log(`Attempt ${attempt}/${maxRetries} failed: ${(error as Error).message}`);
+            if (attempt === maxRetries) throw error;
+            console.log(`Waiting ${delayMs}ms before retry...`);
+            await delay(delayMs);
         }
     }
-    throw lastError;
+    throw new Error('Unreachable');
 }
 async function run() {
     await consumer.connect();
@@ -46,11 +41,15 @@ async function run() {
     await consumer.run({
         eachMessage: async ({ topic, partition, message }) => {
             const data = JSON.parse(message.value?.toString() || '{}');
-            console.log(`Received: ad_id = ${data.ad_id}, partition = ${partition} `);
+            if (!data.ad_id || !data.impression_id) {
+                console.error('Invalid message, skipping:', data);
+                return;
+            }
+            console.log(`Received: ad_id = ${data.ad_id}, impression_id = ${data.impression_id}, partition = ${partition} `);
             await withRetry(async () => {
                 await pool.query(
-                    `INSERT INTO impressions (ad_id) VALUES ($1)`,
-                    [data.ad_id]
+                    `INSERT INTO impressions (ad_id, impression_id) VALUES ($1, $2) ON CONFLICT (impression_id) DO NOTHING`,
+                    [data.ad_id, data.impression_id]
                 );
             });
             console.log(`Inserted impression for ad_id = ${data.ad_id}`);

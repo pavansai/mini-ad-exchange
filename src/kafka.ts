@@ -12,7 +12,7 @@ export async function connectProducer() {
   console.log('Kafka producer connected');
 }
 
-export async function sendImpression(adId: string) {
+export async function sendImpression(adId: string, impressionId: string) {
   await producer.send({
     topic: 'impressions',
     messages: [
@@ -20,6 +20,7 @@ export async function sendImpression(adId: string) {
         key: adId,
         value: JSON.stringify({
           ad_id: adId,
+          impression_id: impressionId,
           timestamp: Date.now(),
         }),
       },
