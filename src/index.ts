@@ -1,11 +1,10 @@
 import express from 'express';
-import { start } from 'node:repl';
+import { randomUUID } from 'crypto';
 import pool from './db';
-import { error } from 'node:console';
 import { connectProducer, sendImpression } from './kafka';
+
 const app = express();
 const PORT = 3000;
-
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
@@ -34,21 +33,28 @@ app.get('/ad', async (req, res) => {
         return;
     }
     const ad = result.rows[0];
+    const impressionId = randomUUID();
+
     res.json({
         ad_id: ad.id,
         image_url: ad.image_url,
         click_url: `http://localhost:${PORT}/click?ad_id=${ad.id}`,
-        impression_url: `http://localhost:${PORT}/impression?ad_id=${ad.id}`,
+        impression_url: `http://localhost:${PORT}/impression?ad_id=${ad.id}&impression_id=${impressionId}`,
     })
 });
+
 app.get('/impression', async (req, res) => {
-    const adId = req.query.ad_id;
-    if (!adId) {
-        res.status(400).json({ error: 'ad_id is required' });
-        return;
+    const adIdRaw = req.query.ad_id;
+    const impressionIdRaw = req.query.impression_id;
+
+    if (typeof adIdRaw !== 'string' || typeof impressionIdRaw !== 'string') {
+        return res.status(400).json({ error: 'ad_id and impression_id must be strings' })
     }
-    await sendImpression(adId as string);
-    
+
+    const adId = adIdRaw;
+    const impressionId = impressionIdRaw;
+
+    await sendImpression(adId, impressionId);
     const pixel = Buffer.from(
         'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
         'base64'
@@ -57,11 +63,10 @@ app.get('/impression', async (req, res) => {
     res.send(pixel);
 });
 
-
 app.get('/click', async (req, res) => {
     const adId = req.query.ad_id;
     if (!adId) {
-        res.status(400).json({ error: 'a_id is required' });
+        res.status(400).json({ error: 'ad_id is required' });
         return;
     }
 
@@ -79,10 +84,10 @@ app.get('/click', async (req, res) => {
         res.status(400).json({ error: 'Ad not found' });
         return;
     }
-})
+});
+
 connectProducer().then(() => {
     app.listen(PORT, () => {
         console.log(`Ad server running on http://localhost:${PORT}`);
     });
 });
-
