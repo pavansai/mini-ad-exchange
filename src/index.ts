@@ -45,14 +45,12 @@ app.get('/ad', async (req, res) => {
 
 app.get('/impression', async (req, res) => {
     const adIdRaw = req.query.ad_id;
-    const impressionIdRaw = req.query.impression_id;
-
-    if (typeof adIdRaw !== 'string' || typeof impressionIdRaw !== 'string') {
-        return res.status(400).json({ error: 'ad_id and impression_id must be strings' })
+    if(typeof adIdRaw !== 'string'){
+        return res.status(400).json({ error: 'ad_id must be a string '})
     }
 
     const adId = adIdRaw;
-    const impressionId = impressionIdRaw;
+    const impressionId = randomUUID();
 
     await sendImpression(adId, impressionId);
     const pixel = Buffer.from(
